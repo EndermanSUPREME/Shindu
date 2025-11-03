@@ -97,3 +97,13 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+.vscode
+DEVELOPER.md
+Packages/
+Project*/
+
+Assets/*
+!Assets/Scripts/
+!Assets/Scripts/**/*.cs
+Assets/Scripts/*.meta
