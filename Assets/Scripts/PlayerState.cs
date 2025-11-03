@@ -18,9 +18,11 @@ namespace ShinduPlayer
         public bool hanging = false;
 
         public float moveSpeed, jumpForce, rotationSpeed,
-                gravityMultiplier, groundCheckRadius;
+                gravityMultiplier, groundCheckRadius, defaultColliderRadius;
 
         public LayerMask groundMask, wallLayer;
+
+        public MovementTransforms movementTransforms;
 
         private static PlayerManager _instance;
         // if the _instance exists return it, otherwise create a new instance
@@ -56,19 +58,26 @@ namespace ShinduPlayer
         public PlayerState GetState(){ return state; }
     }
 
-
-
     // base / abstract class
     public abstract class PlayerState
     {
-        // shared between derived classes
+        // shared variables between derived classes
         protected CharacterController controller;
         protected CapsuleCollider capCollider;
         protected PlayerState nextState = null;
 
+        // shared methods between derived classes
+        protected void SetColliderRadious(float r)
+        {
+            capCollider.radius = r;
+            controller.radius = r;
+        }
+
         // derived classes must implement this function
         public abstract void Perform();
+        // Check if the next state has been dispatched, returns null if not dispatched
         public abstract PlayerState ReadSignal();
+        // dispatch the next state
         public abstract void Signal(PlayerState pState);
     }
 
@@ -86,23 +95,5 @@ namespace ShinduPlayer
             this.rightFoot = rightFoot;
             this.wallCheckPoint = wallCheckPoint;
         }
-    }
-
-    public class WallMovement : PlayerState
-    {
-        public WallMovement(CharacterController ctrler, CapsuleCollider capCol)
-        {
-            controller = ctrler;
-            capCollider = capCol;
-
-            nextState = null;
-        }
-
-        public override void Perform()
-        {
-            if (controller == null) return;
-        }
-        public override PlayerState ReadSignal() { return nextState; }
-        public override void Signal(PlayerState pState) { nextState = pState; }
     }
 }

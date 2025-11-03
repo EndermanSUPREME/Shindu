@@ -6,14 +6,11 @@ using ShinduPlayer;
 // derived / concrete class
 public class NormalMovement : PlayerState
 {
-    public NormalMovement(
-        CharacterController ctrler,
-        CapsuleCollider capCol,
-        MovementTransforms mvTrans)
+    public NormalMovement(CharacterController ctrler, CapsuleCollider capCol)
     {
-        leftFoot = mvTrans.leftFoot;
-        rightFoot = mvTrans.rightFoot;
-        wallCheckPoint = mvTrans.wallCheckPoint;
+        leftFoot = PlayerManager.Instance.movementTransforms.leftFoot;
+        rightFoot = PlayerManager.Instance.movementTransforms.rightFoot;
+        wallCheckPoint = PlayerManager.Instance.movementTransforms.wallCheckPoint;
 
         controller = ctrler;
         capCollider = capCol;
@@ -151,8 +148,6 @@ public class NormalMovement : PlayerState
                         if (PlayerManager.Instance.AnimExists())
                         {
                             float landingVel = Mathf.Abs(velocity.y);
-                            // Debug.Log($"Impact Vel -> {landingVel}");
-
                             if (landingVel < 18)
                             {
                                 PlayerManager.Instance.GetPlayerAnimator().Play("soft_landing");
@@ -200,12 +195,6 @@ public class NormalMovement : PlayerState
         }
     }
 
-    void SetColliderRadious(float r)
-    {
-        capCollider.radius = r;
-        controller.radius = r;
-    }
-
     // executes when player is moving normally
     void CheckWallCollision()
     {
@@ -223,18 +212,8 @@ public class NormalMovement : PlayerState
                 float timeElapsed = Time.time - wallPressTime;
                 if (timeElapsed >= 0.35f)
                 {
-                    /*
-                    // run and forget about it
-                    _ = FlushWithWall(-hit.normal);
-                    
-                    HugWall();
-                    // reset value
-                    wallPressTime = 0;
-                    */
-
-                    Debug.Log("Sending Signal");
-
-                    Signal(new WallMovement(controller, capCollider));
+                    Debug.Log("Next State Dispatched [WallMovement]");
+                    Signal(new WallMovement(controller, capCollider, -hit.normal));
                 }
             }
         } else

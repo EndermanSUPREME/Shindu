@@ -146,13 +146,11 @@ public class PlayerCamera : MonoBehaviour
         RaycastHit hit;
         Vector3 rayDir = (cam.position - baseCameraPoint.position).normalized;
 
-        Debug.DrawRay(baseCameraPoint.position, rayDir, Color.yellow);
-
         bool rayLanded = Physics.Raycast(baseCameraPoint.position, rayDir, out hit, 5, obstacleLayer);
 
         if (rayLanded)
         {
-            Debug.Log("Clipping Obstacle!");
+            Debug.Log("Camera Clipping Obstacle!");
             isClipping = true;
 
             // try to find the best position for the camera where the camera-view
