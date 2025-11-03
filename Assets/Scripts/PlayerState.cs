@@ -3,32 +3,51 @@ using System.Threading.Tasks;
 
 namespace ShinduPlayer
 {
-    public class PlayerManager
+    [CreateAssetMenu(fileName = "PlayerManager", menuName = "Scriptable_Objects/PlayerManager")]
+    public class PlayerManager : ScriptableObject
     {
         PlayerState state;
         Animator playerAnim;
 
-        public bool focused = false;
-        public bool lockedIn = false;
-        public bool isGrounded = false;
-        public bool falling = false;
-        public bool huggingWall = false;
-        public bool crouched = false;
-        public bool isRolling = false;
-        public bool hanging = false;
+        [HideInInspector] public MovementTransforms movementTransforms;
 
-        public float moveSpeed, jumpForce, rotationSpeed,
-                gravityMultiplier, groundCheckRadius, defaultColliderRadius;
+        [Header("Player Stats")]
+        public float moveSpeed = 4, jumpForce = 3, rotationSpeed = 120,
+                    gravityMultiplier = 2, groundCheckRadius = 0.25f;
 
-        public LayerMask groundMask, wallLayer;
+        [Header("Player Transforms")]
+        public Transform leftFoot, rightFoot, wallCheckPoint;
 
-        public MovementTransforms movementTransforms;
+        [HideInInspector] public float defaultColliderRadius;
+
+        [Header("Player States")]
+        public bool focused;
+        public bool lockedIn;
+        public bool isGrounded;
+        public bool falling;
+        public bool huggingWall;
+        public bool crouched;
+        public bool isRolling;
+        public bool hanging;
+
+        [Header("Raycast Layers")]
+        public LayerMask groundMask;
+        public LayerMask wallLayer;
 
         private static PlayerManager _instance;
-        // if the _instance exists return it, otherwise create a new instance
-        public static PlayerManager Instance => _instance ??= new PlayerManager();
-
-        private PlayerManager(){}
+        public static PlayerManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = Resources.Load<PlayerManager>("PlayerManager");
+                    if (_instance == null)
+                        Debug.LogError("PlayerManager asset not found in Resources folder!");
+                }
+                return _instance;
+            }
+        }
 
         // check if the player is using the movement-stick
         public bool IsMoving()

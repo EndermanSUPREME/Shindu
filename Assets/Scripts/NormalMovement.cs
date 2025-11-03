@@ -24,6 +24,7 @@ public class NormalMovement : PlayerState
         if (controller == null || nextState != null) return;
 
         CheckWallCollision();
+        CheckLedges();
         Move();
 
         if (PlayerManager.Instance.AnimExists())
@@ -220,5 +221,12 @@ public class NormalMovement : PlayerState
             {
                 wallPressTime = 0;
             }
+    }
+
+    // runs while the player is not grounded
+    // checks for nearby ledges to grab onto
+    void CheckLedges()
+    {
+        if (PlayerManager.Instance.isGrounded) return;
     }
 }

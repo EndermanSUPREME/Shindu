@@ -5,14 +5,6 @@ using ShinduPlayer;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // these variables all get copied to the PlayerManager singleton
-    [SerializeField] LayerMask wallLayer;
-    [SerializeField] Animator anim;
-    [SerializeField] Transform leftFoot, rightFoot, wallCheckPoint;
-    [SerializeField] float moveSpeed = 4, jumpForce = 3, rotationSpeed = 120,
-                            gravityMultiplier = 2, groundCheckRadius = 0.25f;
-    [SerializeField] LayerMask groundMask;
-
     public void FinishedRoll() { PlayerManager.Instance.isRolling = false; }
 
     void Start()
@@ -24,28 +16,13 @@ public class PlayerMovement : MonoBehaviour
             PlayerManager.Instance.defaultColliderRadius = GetComponent<CharacterController>().radius;
         }
 
-        if (anim != null)
+        if (GetComponent<Animator>() != null)
         {
-            PlayerManager.Instance.SetPlayerAnimator(anim);
+            PlayerManager.Instance.SetPlayerAnimator(GetComponent<Animator>());
         } else
             {
-                Debug.LogWarning("PlayerMovement Missing Value for 'anim'!");
+                Debug.LogWarning("PlayerMovement Missing Value for type 'Animator'!");
             }
-
-        PlayerManager.Instance.moveSpeed = moveSpeed;
-        PlayerManager.Instance.jumpForce = jumpForce;
-        PlayerManager.Instance.rotationSpeed = rotationSpeed;
-        PlayerManager.Instance.gravityMultiplier = gravityMultiplier;
-        PlayerManager.Instance.groundCheckRadius = groundCheckRadius;
-
-        PlayerManager.Instance.groundMask = groundMask;
-        PlayerManager.Instance.wallLayer = wallLayer;
-
-        PlayerManager.Instance.movementTransforms = new MovementTransforms(
-                                leftFoot,
-                                rightFoot,
-                                wallCheckPoint
-                            );
 
         PlayerManager.Instance.SetState(
             new NormalMovement(
