@@ -5,6 +5,8 @@ using ShinduPlayer;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [SerializeField] Transform leftFoot, rightFoot, wallCheckPoint, ledgeCheckPoint;
+
     public void FinishedRoll() { PlayerManager.Instance.isRolling = false; }
 
     void Start()
@@ -24,10 +26,14 @@ public class PlayerMovement : MonoBehaviour
                 Debug.LogWarning("PlayerMovement Missing Value for type 'Animator'!");
             }
 
+        PlayerManager.Instance.leftFoot = leftFoot;
+        PlayerManager.Instance.rightFoot = rightFoot;
+        PlayerManager.Instance.wallCheckPoint = wallCheckPoint;
+        PlayerManager.Instance.ledgeCheckPoint = ledgeCheckPoint;
+
         PlayerManager.Instance.SetState(
             new NormalMovement(
-                GetComponent<CharacterController>(),
-                GetComponent<CapsuleCollider>()
+                GetComponent<CharacterController>()
             )
         );
     }

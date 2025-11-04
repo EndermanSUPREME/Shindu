@@ -6,14 +6,13 @@ using ShinduPlayer;
 // derived / concrete class
 public class NormalMovement : PlayerState
 {
-    public NormalMovement(CharacterController ctrler, CapsuleCollider capCol)
+    public NormalMovement(CharacterController ctrler)
     {
-        leftFoot = PlayerManager.Instance.movementTransforms.leftFoot;
-        rightFoot = PlayerManager.Instance.movementTransforms.rightFoot;
-        wallCheckPoint = PlayerManager.Instance.movementTransforms.wallCheckPoint;
+        leftFoot = PlayerManager.Instance.leftFoot;
+        rightFoot = PlayerManager.Instance.rightFoot;
+        wallCheckPoint = PlayerManager.Instance.wallCheckPoint;
 
         controller = ctrler;
-        capCollider = capCol;
         nextState = null;
 
         defaultColliderRadius = controller.radius;
@@ -53,8 +52,8 @@ public class NormalMovement : PlayerState
     // returns true if either foot sphere is touching a ground layered object
     bool IsGrounded()
     {
-        bool leftFootGrounded = Physics.CheckSphere(leftFoot.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
-        bool rightFootGrounded = Physics.CheckSphere(rightFoot.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
+        bool leftFootGrounded = Physics.CheckSphere(leftFoot.transform.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
+        bool rightFootGrounded = Physics.CheckSphere(rightFoot.transform.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
         return PlayerManager.Instance.isRolling || leftFootGrounded || rightFootGrounded;
     }
 
@@ -204,7 +203,7 @@ public class NormalMovement : PlayerState
             RaycastHit hit;
             PlayerManager.Instance.GetPlayerAnimator().ResetTrigger("ExitWallHug");
 
-            if (Physics.Raycast(wallCheckPoint.position, wallCheckPoint.forward, out hit, 1, PlayerManager.Instance.wallLayer))
+            if (Physics.Raycast(wallCheckPoint.transform.position, wallCheckPoint.transform.forward, out hit, 1, PlayerManager.Instance.wallLayer))
             {
                 // set time of first wall contact
                 if (wallPressTime == 0) wallPressTime = Time.time;
@@ -214,7 +213,7 @@ public class NormalMovement : PlayerState
                 if (timeElapsed >= 0.35f)
                 {
                     Debug.Log("Next State Dispatched [WallMovement]");
-                    Signal(new WallMovement(controller, capCollider, -hit.normal));
+                    Signal(new WallMovement(controller, -hit.normal));
                 }
             }
         } else
@@ -227,6 +226,25 @@ public class NormalMovement : PlayerState
     // checks for nearby ledges to grab onto
     void CheckLedges()
     {
+        if (PlayerManager.Instance.ledgeCheckPoint == null)
+        {
+            Debug.LogError("PlayerManager Scriptable Object attribute 'ledgeCheckPoint' not defined!");
+            return;
+        }
         if (PlayerManager.Instance.isGrounded) return;
+
+        Vector3 pos = PlayerManager.Instance.ledgeCheckPoint.position;
+        Collider[] nearbyLedges = Physics.OverlapSphere(
+            pos, 0.1f, PlayerManager.Instance.ledgeLayer, QueryTriggerInteraction.UseGlobal
+        );
+
+        if (nearbyLedges.Length > 0 && nearbyLedges[0].GetComponent<Ledge>() != null)
+        {
+            Ledge ledge = nearbyLedges[0].GetComponent<Ledge>();
+
+            // we found a ledge signal to use ledge movement
+            Debug.Log("Next State Dispatched [WallMovement]");
+            Signal(new LedgeMovement(controller, ledge));
+        }
     }
 }

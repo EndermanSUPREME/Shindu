@@ -5,10 +5,9 @@ using ShinduPlayer;
 
 public class WallMovement : PlayerState
 {
-    public WallMovement(CharacterController ctrler, CapsuleCollider capCol, Vector3 wallNormal)
+    public WallMovement(CharacterController ctrler, Vector3 wallNormal)
     {
         controller = ctrler;
-        capCollider = capCol;
 
         nextState = null;
 
@@ -29,7 +28,7 @@ public class WallMovement : PlayerState
             SetColliderRadious(PlayerManager.Instance.defaultColliderRadius);
 
             Debug.Log("Next State Dispatched [NormalMovement]");
-            Signal(new NormalMovement(controller, capCollider));
+            Signal(new NormalMovement(controller));
             return;
         }
 
