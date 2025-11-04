@@ -3,78 +3,50 @@ using System.Threading.Tasks;
 
 namespace ShinduPlayer
 {
-    [CreateAssetMenu(fileName = "PlayerManager", menuName = "Scriptable_Objects/PlayerManager")]
-    public class PlayerManager : ScriptableObject
+    // universal Singleton template object
+    public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
-        PlayerState state;
-        Animator playerAnim;
+        private static T instance;
+        private static bool quittingApp = false;
 
-        [HideInInspector] public MovementTransforms movementTransforms;
-
-        [Header("Player Stats")]
-        public float moveSpeed = 4, jumpForce = 3, rotationSpeed = 120,
-                    gravityMultiplier = 2, groundCheckRadius = 0.25f;
-
-        [Header("Player Transforms")]
-        public Transform leftFoot, rightFoot, wallCheckPoint;
-
-        [HideInInspector] public float defaultColliderRadius;
-
-        [Header("Player States")]
-        public bool focused;
-        public bool lockedIn;
-        public bool isGrounded;
-        public bool falling;
-        public bool huggingWall;
-        public bool crouched;
-        public bool isRolling;
-        public bool hanging;
-
-        [Header("Raycast Layers")]
-        public LayerMask groundMask;
-        public LayerMask wallLayer;
-
-        private static PlayerManager _instance;
-        public static PlayerManager Instance
+        public static T Instance
         {
-            get
+            get // getter C# property
             {
-                if (_instance == null)
+                if (quittingApp) return null;
+                if (instance != null) return instance;
+
+                // Try to find one in the scene first
+                instance = FindFirstObjectByType<T>();
+
+                if (instance == null)
                 {
-                    _instance = Resources.Load<PlayerManager>("PlayerManager");
-                    if (_instance == null)
-                        Debug.LogError("PlayerManager asset not found in Resources folder!");
+                    GameObject singletonObject = new GameObject(typeof(T).Name);
+                    instance = singletonObject.AddComponent<T>();
                 }
-                return _instance;
+
+                return instance;
             }
         }
 
-        // check if the player is using the movement-stick
-        public bool IsMoving()
+        protected virtual void Awake()
         {
-            float x = Input.GetAxis("Horizontal");
-            float z = Input.GetAxis("Vertical");
-            Vector3 inputDir = new Vector3(x, 0f, z).normalized;
-
-            return inputDir != Vector3.zero;
+            if (instance == null)
+            {
+                // create the new instance
+                instance = this as T;
+            } else if (instance != this)
+                {
+                    // remove other instances
+                    Destroy(gameObject);
+                }
         }
 
-        public void SetPlayerAnimator(Animator anim) { playerAnim = anim; }
-        public Animator GetPlayerAnimator() { return playerAnim; }
-        public bool AnimExists() { return playerAnim != null; }
-
-        public void DisableRoot()
+        // when the application quits perform the following
+        void OnApplicationQuit()
         {
-            if (PlayerManager.Instance.AnimExists()) { playerAnim.applyRootMotion = false; }
+            quittingApp = true;
         }
-        public void EnableRoot()
-        {
-            if (PlayerManager.Instance.AnimExists()) { playerAnim.applyRootMotion = true; }
-        }
-
-        public void SetState(PlayerState newState){ state = newState; }
-        public bool HasState(){ return state != null; }
-        public PlayerState GetState(){ return state; }
     }
 
     // base / abstract class
@@ -82,13 +54,11 @@ namespace ShinduPlayer
     {
         // shared variables between derived classes
         protected CharacterController controller;
-        protected CapsuleCollider capCollider;
         protected PlayerState nextState = null;
 
         // shared methods between derived classes
         protected void SetColliderRadious(float r)
         {
-            capCollider.radius = r;
             controller.radius = r;
         }
 
