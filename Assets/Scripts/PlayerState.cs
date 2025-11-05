@@ -53,36 +53,24 @@ namespace ShinduPlayer
     public abstract class PlayerState
     {
         // shared variables between derived classes
-        protected CharacterController controller;
         protected PlayerState nextState = null;
+        protected CharacterController controller;
 
         // shared methods between derived classes
         protected void SetColliderRadious(float r)
         {
-            controller.radius = r;
+            PlayerManager.Instance.GetController().radius = r;
         }
 
         // derived classes must implement this function
         public abstract void Perform();
+        // derived classes can optionally override virtual methods
+        public virtual void FixedPerform(){}
+        protected abstract void Move();
+
         // Check if the next state has been dispatched, returns null if not dispatched
         public abstract PlayerState ReadSignal();
         // dispatch the next state
         public abstract void Signal(PlayerState pState);
-    }
-
-    public struct MovementTransforms
-    {
-        public Transform leftFoot, rightFoot, wallCheckPoint;
-
-        public MovementTransforms(
-            Transform leftFoot,
-            Transform rightFoot,
-            Transform wallCheckPoint
-        )
-        {
-            this.leftFoot = leftFoot;
-            this.rightFoot = rightFoot;
-            this.wallCheckPoint = wallCheckPoint;
-        }
     }
 }

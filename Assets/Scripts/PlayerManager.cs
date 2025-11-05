@@ -20,6 +20,7 @@ public class PlayerManager : Singleton<PlayerManager>
     public bool crouched;
     public bool isRolling;
     public bool hanging;
+    public bool droppingDown;
 
     [Header("Raycast Layers")]
     public LayerMask groundMask;
@@ -27,10 +28,16 @@ public class PlayerManager : Singleton<PlayerManager>
     public LayerMask ledgeLayer;
 
     // runtime unity variables
-    Animator playerAnim;
-    public MovementTransforms movementTransforms;
+    [SerializeField] Animator playerAnim;
+    [SerializeField] CharacterController controller;
+
     public Transform leftFoot, rightFoot, wallCheckPoint, ledgeCheckPoint;
     [HideInInspector] public float defaultColliderRadius;
+
+    void Start()
+    {
+        defaultColliderRadius = controller.radius;
+    }
 
     // check if the player is using the movement-stick
     public bool IsMoving()
@@ -42,9 +49,11 @@ public class PlayerManager : Singleton<PlayerManager>
         return inputDir != Vector3.zero;
     }
 
-    public void SetPlayerAnimator(Animator anim) { playerAnim = anim; }
     public Animator GetPlayerAnimator() { return playerAnim; }
     public bool AnimExists() { return playerAnim != null; }
+
+    public CharacterController GetController() { return controller; }
+    public bool ControllerEnabled() { return controller != null && controller.enabled; }
 
     public void DisableRoot()
     {

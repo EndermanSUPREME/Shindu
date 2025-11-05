@@ -5,62 +5,15 @@ using ShinduPlayer;
 
 public class WallMovement : PlayerState
 {
-    public WallMovement(CharacterController ctrler, Vector3 wallNormal)
+    public WallMovement(Vector3 wallNormal)
     {
-        controller = ctrler;
-
+        controller = PlayerManager.Instance.GetController();
         nextState = null;
 
         // run and forget about it
         _ = FlushWithWall(wallNormal);
         HugWall();
     }
-
-    public override void Perform()
-    {
-        if (controller == null || nextState != null) return;
-
-        // cancel wall hug
-        if (!PlayerManager.Instance.IsMoving())
-        {
-            PlayerManager.Instance.huggingWall = false;
-            PlayerManager.Instance.GetPlayerAnimator().SetTrigger("ExitWallHug");
-            SetColliderRadious(PlayerManager.Instance.defaultColliderRadius);
-
-            Debug.Log("Next State Dispatched [NormalMovement]");
-            Signal(new NormalMovement(controller));
-            return;
-        }
-
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-        Vector3 inputDir = new Vector3(x, 0f, z).normalized;
-
-        if (inputDir != Vector3.zero && PlayerManager.Instance.AnimExists())
-        {
-            // compare the player fwd to the input dir
-            // to calculate the move direction along the wall
-
-            float angleToRight = Vector3.Angle(controller.transform.right, inputDir);
-            float angleToLeft = Vector3.Angle(-controller.transform.right, inputDir);
-            if (angleToRight < 50)
-            {
-                PlayerManager.Instance.GetPlayerAnimator().SetFloat("wall_move_dir", -1);
-            } else if (angleToLeft < 50)
-                {
-                    PlayerManager.Instance.GetPlayerAnimator().SetFloat("wall_move_dir", 1);
-                } else
-                    {
-                        PlayerManager.Instance.GetPlayerAnimator().SetFloat("wall_move_dir", 0);
-                    }
-        } else
-            {
-                PlayerManager.Instance.GetPlayerAnimator().SetFloat("wall_move_dir", 0);
-            }
-    }
-    public override PlayerState ReadSignal() { return nextState; }
-    public override void Signal(PlayerState pState) { nextState = pState; }
-
     async Task FlushWithWall(Vector3 normal)
     {
         Quaternion targetRotation = Quaternion.LookRotation(normal, Vector3.up);
@@ -68,6 +21,8 @@ public class WallMovement : PlayerState
         // Rotate until close enough
         while (Vector3.Angle(controller.transform.forward, normal) > 0.1f)
         {
+            if (controller == null || nextState != null) return;
+            
             controller.transform.rotation = Quaternion.Slerp(
                 controller.transform.rotation,
                 targetRotation,
@@ -75,7 +30,6 @@ public class WallMovement : PlayerState
             await Task.Yield();
         }
     }
-
     // Transition from normal state into wall-hugging state
     void HugWall()
     {
@@ -90,5 +44,40 @@ public class WallMovement : PlayerState
                 PlayerManager.Instance.GetPlayerAnimator().Play("wall_hug");
             }
         }
+    }
+
+    public override void Perform()
+    {
+        if (controller == null || nextState != null) return;
+
+        Move();
+    }
+    public override PlayerState ReadSignal() { return nextState; }
+    public override void Signal(PlayerState pState) { nextState = pState; }
+    protected override void Move()
+    {
+        // cancel wall hug
+        if (!PlayerManager.Instance.IsMoving())
+        {
+            PlayerManager.Instance.huggingWall = false;
+            PlayerManager.Instance.GetPlayerAnimator().SetTrigger("ExitWallHug");
+            SetColliderRadious(PlayerManager.Instance.defaultColliderRadius);
+
+            Debug.Log("Next State Dispatched [NormalMovement]");
+            Signal(new NormalMovement());
+            return;
+        }
+
+        float x = Input.GetAxis("Horizontal");
+        if (x < -0.5f)
+        {
+            PlayerManager.Instance.GetPlayerAnimator().SetFloat("wall_move_dir", 1);
+        } else if (x > 0.5)
+            {
+                PlayerManager.Instance.GetPlayerAnimator().SetFloat("wall_move_dir", -1);
+            } else
+                {
+                    PlayerManager.Instance.GetPlayerAnimator().SetFloat("wall_move_dir", 0);
+                }
     }
 }

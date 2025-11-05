@@ -5,36 +5,17 @@ using ShinduPlayer;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] Transform leftFoot, rightFoot, wallCheckPoint, ledgeCheckPoint;
+    [SerializeField] private string stateName;
 
     public void FinishedRoll() { PlayerManager.Instance.isRolling = false; }
+    public void ClimbedLedge() { PlayerManager.Instance.hanging = false; }
 
     void Start()
     {
         Application.targetFrameRate = 75;
 
-        if (GetComponent<CharacterController>() != null)
-        {
-            PlayerManager.Instance.defaultColliderRadius = GetComponent<CharacterController>().radius;
-        }
-
-        if (GetComponent<Animator>() != null)
-        {
-            PlayerManager.Instance.SetPlayerAnimator(GetComponent<Animator>());
-        } else
-            {
-                Debug.LogWarning("PlayerMovement Missing Value for type 'Animator'!");
-            }
-
-        PlayerManager.Instance.leftFoot = leftFoot;
-        PlayerManager.Instance.rightFoot = rightFoot;
-        PlayerManager.Instance.wallCheckPoint = wallCheckPoint;
-        PlayerManager.Instance.ledgeCheckPoint = ledgeCheckPoint;
-
         PlayerManager.Instance.SetState(
-            new NormalMovement(
-                GetComponent<CharacterController>()
-            )
+            new NormalMovement()
         );
     }
 
@@ -44,6 +25,22 @@ public class PlayerMovement : MonoBehaviour
         {
             if (PlayerManager.Instance.GetState().ReadSignal() == null)
             {
+                switch (PlayerManager.Instance.GetState())
+                {
+                    case NormalMovement:
+                        stateName = "NormalMovement";
+                    break;
+                    case WallMovement:
+                        stateName = "WallMovement";
+                    break;
+                    case LedgeMovement:
+                        stateName = "LedgeMovement";
+                    break;
+                    default:
+                        stateName = "Unknown";
+                    break;
+                }
+
                 // perform current state when there is no signal
                 PlayerManager.Instance.GetState().Perform();
             } else
@@ -53,5 +50,54 @@ public class PlayerMovement : MonoBehaviour
                     PlayerManager.Instance.SetState(nState);
                 }
         }
+    }
+
+    void FixedUpdate()
+    {
+        if (PlayerManager.Instance.HasState())
+        {
+            if (PlayerManager.Instance.GetState().ReadSignal() == null)
+            {
+                PlayerManager.Instance.GetState().FixedPerform();
+            }
+        }
+    }
+
+    void UpdatePlayerRotation()
+    {
+        // type checking using C# keyword is
+        if (PlayerManager.Instance.GetState() is NormalMovement s)
+        {
+            float x = Input.GetAxis("Horizontal");
+            float z = Input.GetAxis("Vertical");
+            Vector3 inputDir = new Vector3(x, 0f, z);
+            
+            if (inputDir != Vector3.zero && !PlayerManager.Instance.focused && !PlayerManager.Instance.isRolling)
+            {
+                Vector3 moveDir = s.CalculateLookDirection(inputDir);
+                s.RotatePlayer(moveDir);
+            }
+        }
+    }
+
+    void OnAnimatorMove()
+    {
+        if (GetComponent<CharacterController>() is CharacterController controller)
+        {
+            if (PlayerManager.Instance.AnimExists())
+            {
+                // manually apply position
+                Vector3 deltaPos = PlayerManager.Instance.GetPlayerAnimator().deltaPosition;
+                controller.Move(deltaPos);
+
+                // manually apply rotation
+                UpdatePlayerRotation();
+            }
+        }
+    }
+
+    void OnDrawGizmos()
+    {
+        // Gizmos.DrawSphere(PlayerManager.Instance.ledgeCheckPoint.position, 0.1f);
     }
 }//EndScript

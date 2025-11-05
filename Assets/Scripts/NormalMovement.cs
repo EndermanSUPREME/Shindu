@@ -2,28 +2,44 @@ using UnityEngine;
 using System.Threading.Tasks;
 
 using ShinduPlayer;
+using ControllerInputs;
 
 // derived / concrete class
 public class NormalMovement : PlayerState
 {
-    public NormalMovement(CharacterController ctrler)
+    const float gravity = -9.81f;
+    Vector3 velocity;
+
+    int jumpCount = 0;
+    float moveBlend = 0;
+    float styleBlend = 0;
+    float wallPressTime = 0;
+
+    Transform leftFoot, rightFoot, wallCheckPoint;
+
+    public NormalMovement()
     {
         leftFoot = PlayerManager.Instance.leftFoot;
         rightFoot = PlayerManager.Instance.rightFoot;
         wallCheckPoint = PlayerManager.Instance.wallCheckPoint;
 
-        controller = ctrler;
+        PlayerManager.Instance.GetPlayerAnimator().SetFloat("style", 0);
+        PlayerManager.Instance.GetPlayerAnimator().SetFloat("speed", 0);
+
+        controller = PlayerManager.Instance.GetController();
+
         nextState = null;
 
-        defaultColliderRadius = controller.radius;
+        SetColliderRadious(PlayerManager.Instance.defaultColliderRadius);
+
+        PlayerManager.Instance.EnableRoot();
     }
 
+    // run within Update
     public override void Perform()
     {
         if (controller == null || nextState != null) return;
 
-        CheckWallCollision();
-        CheckLedges();
         Move();
 
         if (PlayerManager.Instance.AnimExists())
@@ -31,22 +47,22 @@ public class NormalMovement : PlayerState
             UpdateAnimator();
         }
     }
+    // run within FixedUpdate()
+    public override void FixedPerform()
+    {
+        if (controller == null || nextState != null) return;
+
+        // physics related tasks
+        CheckWallCollision();
+        CheckLedges();
+    }
+
     public override PlayerState ReadSignal() { return nextState; }
     public override void Signal(PlayerState pState) { nextState = pState; }
 
-    const float gravity = -9.81f;
-    Vector3 velocity;
-    int jumpCount = 0;
-    float moveBlend = 0;
-    float styleBlend = 0;
-    float wallPressTime = 0;
-    float defaultColliderRadius = 0;
-
-    Transform leftFoot, rightFoot, wallCheckPoint;
-
     bool IsCrouching()
     {
-        return Input.GetButton("RightBumper") && PlayerManager.Instance.isGrounded;
+        return ControllerInput.HoldingRightBumper() && PlayerManager.Instance.isGrounded;
     }
 
     // returns true if either foot sphere is touching a ground layered object
@@ -54,62 +70,43 @@ public class NormalMovement : PlayerState
     {
         bool leftFootGrounded = Physics.CheckSphere(leftFoot.transform.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
         bool rightFootGrounded = Physics.CheckSphere(rightFoot.transform.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
-        return PlayerManager.Instance.isRolling || leftFootGrounded || rightFootGrounded;
-    }
-
-    void UpdateAnimator()
-    {
-        styleBlend = Mathf.Lerp(styleBlend, IsCrouching() ? 1 : 0, 5 * Time.deltaTime);
-        PlayerManager.Instance.GetPlayerAnimator().SetFloat("style", styleBlend);
-        PlayerManager.Instance.GetPlayerAnimator().SetFloat("speed", moveBlend);
+        
+        if (PlayerManager.Instance.droppingDown) {
+            return leftFootGrounded || rightFootGrounded;
+        }
+        
+        return PlayerManager.Instance.isRolling || jumpCount == 0 || leftFootGrounded || rightFootGrounded;
     }
 
     // specific methods for this derived class
-    void Move()
+    protected override void Move()
     {
-        if (controller.enabled)
+        if (controller != null && controller.enabled)
         {
             // these 3 variables are needed here
             float x = Input.GetAxis("Horizontal");
             float z = Input.GetAxis("Vertical");
-            Vector3 inputDir = new Vector3(x, 0f, z).normalized;
+            Vector3 inputDir = new Vector3(x, 0f, z);
 
             // mark when player is in a crouched state
             PlayerManager.Instance.crouched = IsCrouching();
 
             if (inputDir != Vector3.zero && !PlayerManager.Instance.focused && !PlayerManager.Instance.isRolling)
             {
-                // get camera directions
-                Vector3 camForward = Camera.main.transform.forward;
-                camForward.y = 0; // flatten to horizontal plane
-                camForward.Normalize();
-
-                Vector3 camRight = Camera.main.transform.right;
-                camRight.y = 0;
-                camRight.Normalize();
-
-                // move relative to the camera
-                Vector3 moveDir = camForward * z + camRight * x;
-
-                // track magnitude to smoothly move the blend-tree parameter
-                moveBlend = moveDir.magnitude;
-
-                moveDir.Normalize();
-
-                // smooth rotation via slerp
-                Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-                controller.transform.rotation = Quaternion.Slerp(
-                    controller.transform.rotation,
-                    targetRotation,
-                    PlayerManager.Instance.rotationSpeed * Time.deltaTime
-                );
-            
-                // apply controller input
-                if (jumpCount > 0)
+                if (inputDir.magnitude >= 0.1f)
                 {
-                    // not using root-motion when falling/jumping
-                    controller.Move(moveDir * PlayerManager.Instance.moveSpeed * Time.deltaTime);
+                    moveBlend = inputDir.magnitude;
+
+                    Vector3 moveDir = CalculateLookDirection(inputDir);
+
+                    // apply controller input
+                    if (jumpCount > 0)
+                    {
+                        // not using root-motion when falling/jumping
+                        controller.Move(moveDir.normalized * PlayerManager.Instance.moveSpeed * Time.deltaTime);
+                    }
                 }
+            
             } else
                 {
                     moveBlend = 0;
@@ -120,7 +117,7 @@ public class NormalMovement : PlayerState
             if (!PlayerManager.Instance.isGrounded)
             {
                 // NOT GROUNDED
-                if (Input.GetButtonDown("Jump") && jumpCount == 1)
+                if (ControllerInput.PressedA() && jumpCount == 1)
                 {
                     if (PlayerManager.Instance.AnimExists())
                     {
@@ -160,6 +157,13 @@ public class NormalMovement : PlayerState
                         PlayerManager.Instance.falling = false;
                     }
 
+                    // if the player is dropping down once we hit the ground we
+                    // can re-allow ledge finding
+                    if (PlayerManager.Instance.droppingDown)
+                    {
+                        PlayerManager.Instance.droppingDown = false;
+                    }
+
                     // base downwards vel while grounded
                     if (velocity.y < 0)
                     {
@@ -167,7 +171,7 @@ public class NormalMovement : PlayerState
                         velocity.y = -2;
                     }
 
-                    if (Input.GetButtonDown("Jump") && jumpCount == 0)
+                    if (ControllerInput.PressedA() && jumpCount == 0)
                     {
                         if (!PlayerManager.Instance.crouched)
                         {
@@ -213,7 +217,7 @@ public class NormalMovement : PlayerState
                 if (timeElapsed >= 0.35f)
                 {
                     Debug.Log("Next State Dispatched [WallMovement]");
-                    Signal(new WallMovement(controller, -hit.normal));
+                    Signal(new WallMovement(-hit.normal));
                 }
             }
         } else
@@ -231,7 +235,7 @@ public class NormalMovement : PlayerState
             Debug.LogError("PlayerManager Scriptable Object attribute 'ledgeCheckPoint' not defined!");
             return;
         }
-        if (PlayerManager.Instance.isGrounded) return;
+        if (PlayerManager.Instance.isGrounded || PlayerManager.Instance.droppingDown) return;
 
         Vector3 pos = PlayerManager.Instance.ledgeCheckPoint.position;
         Collider[] nearbyLedges = Physics.OverlapSphere(
@@ -243,8 +247,50 @@ public class NormalMovement : PlayerState
             Ledge ledge = nearbyLedges[0].GetComponent<Ledge>();
 
             // we found a ledge signal to use ledge movement
-            Debug.Log("Next State Dispatched [WallMovement]");
-            Signal(new LedgeMovement(controller, ledge));
+            Debug.Log("Next State Dispatched [LedgeMovement]");
+            Signal(new LedgeMovement(ledge));
+        }
+    }
+
+    //===============================================================================
+
+    void UpdateAnimator()
+    {
+        styleBlend = Mathf.Lerp(styleBlend, IsCrouching() ? 1 : 0, 5 * Time.deltaTime);
+        PlayerManager.Instance.GetPlayerAnimator().SetFloat("style", styleBlend);
+        PlayerManager.Instance.GetPlayerAnimator().SetFloat("speed", moveBlend);
+    }
+
+    public Vector3 CalculateLookDirection(Vector3 inputDir)
+    {
+        // get camera directions
+        Vector3 camForward = Camera.main.transform.forward;
+        camForward.y = 0; // flatten to horizontal plane
+        camForward.Normalize();
+
+        Vector3 camRight = Camera.main.transform.right;
+        camRight.y = 0;
+        camRight.Normalize();
+
+        // move relative to the camera
+        Vector3 newFwdDir = camForward * inputDir.z + camRight * inputDir.x;
+        newFwdDir.Normalize();
+
+        return newFwdDir;
+    }
+
+    public void RotatePlayer(Vector3 moveDir)
+    {
+        if (moveDir != Vector3.zero)
+        {
+            Debug.DrawRay(controller.transform.position, moveDir * 2f, Color.red);
+
+            Quaternion toRotation = Quaternion.LookRotation(moveDir, Vector3.up);
+            controller.transform.rotation = Quaternion.RotateTowards(
+                controller.transform.rotation,
+                toRotation,
+                25f
+            );
         }
     }
 }

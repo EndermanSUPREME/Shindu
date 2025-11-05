@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Threading.Tasks;
 
 using ShinduPlayer;
+using ControllerInputs;
 
 public class PlayerCamera : MonoBehaviour
 {
@@ -23,7 +24,7 @@ public class PlayerCamera : MonoBehaviour
 
     bool CheckFocus()
     {
-        return Input.GetButton("LeftBumper") && PlayerManager.Instance.isGrounded;
+        return ControllerInput.HoldingLeftBumper() && PlayerManager.Instance.isGrounded;
     }
 
     void LateUpdate()
@@ -174,11 +175,11 @@ public class PlayerCamera : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        Gizmos.color = Color.white;
-        Gizmos.DrawLine(baseCameraPoint.position, baseCameraPoint.position + baseCameraPoint.forward);
+        //Gizmos.color = Color.white;
+        //Gizmos.DrawLine(baseCameraPoint.position, baseCameraPoint.position + baseCameraPoint.forward);
         
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(baseCameraPoint.position, baseCameraPoint.position + transform.forward);
+        //Gizmos.color = Color.blue;
+        //Gizmos.DrawLine(baseCameraPoint.position, baseCameraPoint.position + transform.forward);
 
         Transform cam = Camera.main.transform;
 
