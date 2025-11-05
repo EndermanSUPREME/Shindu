@@ -106,4 +106,4 @@ Project*/
 Assets/*
 !Assets/Scripts/
 !Assets/Scripts/**/*.cs
-Assets/Scripts/*.meta
+Assets/Scripts/**/*.meta
