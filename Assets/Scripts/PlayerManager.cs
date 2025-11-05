@@ -18,6 +18,7 @@ public class PlayerManager : Singleton<PlayerManager>
     public bool falling;
     public bool huggingWall;
     public bool crouched;
+    public bool attacking;
     public bool isRolling;
     public bool hanging;
     public bool droppingDown;
@@ -38,6 +39,13 @@ public class PlayerManager : Singleton<PlayerManager>
     void Start()
     {
         defaultColliderRadius = controller.radius;
+        if (playerAnim)
+        {
+            AttackSystem.SetAnimator(ref playerAnim);
+        } else
+            {
+                Debug.LogWarning("Player Animator was not set!");
+            }
     }
 
     // check if the player is using the movement-stick

@@ -2,12 +2,13 @@ using UnityEngine;
 using System.Threading.Tasks;
 
 using ShinduPlayer;
+using ControllerInputs;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private string stateName;
-
-    public void FinishedRoll() {}
+    public void OpenFollowThrough() { AttackSystem.OpenFollowThrough(); }
+    public void ResetSwingCount() { AttackSystem.ResetSwingCount(); }
+    public void FinishedAttack() { AttackSystem.FinishedAttack(); }
     public void ClimbedLedge() { PlayerManager.Instance.hanging = false; }
 
     void Start()
@@ -25,24 +26,32 @@ public class PlayerMovement : MonoBehaviour
         {
             if (PlayerManager.Instance.GetState().ReadSignal() == null)
             {
-                switch (PlayerManager.Instance.GetState())
-                {
-                    case NormalMovement:
-                        stateName = "NormalMovement";
-                    break;
-                    case WallMovement:
-                        stateName = "WallMovement";
-                    break;
-                    case LedgeMovement:
-                        stateName = "LedgeMovement";
-                    break;
-                    default:
-                        stateName = "Unknown";
-                    break;
-                }
+                // switch (PlayerManager.Instance.GetState())
+                // {
+                //     case NormalMovement:
+                //         stateName = "NormalMovement";
+                //     break;
+                //     case WallMovement:
+                //         stateName = "WallMovement";
+                //     break;
+                //     case LedgeMovement:
+                //         stateName = "LedgeMovement";
+                //     break;
+                //     default:
+                //         stateName = "Unknown";
+                //     break;
+                // }
 
                 // perform current state when there is no signal
                 PlayerManager.Instance.GetState().Perform();
+
+                if (ControllerInput.PressedX())
+                {
+                    Attack();
+                } else if (ControllerInput.PressedY())
+                    {
+                        UseItem();
+                    }
             } else
                 {
                     Debug.Log("Transitioning to New State");
@@ -50,6 +59,17 @@ public class PlayerMovement : MonoBehaviour
                     PlayerManager.Instance.SetState(nState);
                 }
         }
+    }
+
+    void Attack()
+    {
+        Debug.Log("Attack!");
+        AttackSystem.PerformAttack();
+    }
+
+    void UseItem()
+    {
+        Debug.Log("Using Item!");
     }
 
     void FixedUpdate()

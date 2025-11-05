@@ -76,6 +76,9 @@ public class NormalMovement : PlayerState
         bool leftFootGrounded = Physics.CheckSphere(leftFoot.transform.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
         bool rightFootGrounded = Physics.CheckSphere(rightFoot.transform.position, PlayerManager.Instance.groundCheckRadius, PlayerManager.Instance.groundMask);
         
+        // performing ground attacks
+        if (PlayerManager.Instance.attacking) return true;
+
         if (PlayerManager.Instance.droppingDown) {
             return leftFootGrounded || rightFootGrounded;
         }

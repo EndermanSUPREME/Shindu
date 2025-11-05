@@ -13,6 +13,15 @@ namespace ControllerInputs
         {
             return Input.GetButtonDown("B");
         }
+        public static bool PressedX()
+        {
+            return Input.GetButtonDown("X");
+        }
+        public static bool PressedY()
+        {
+            return Input.GetButtonDown("Y");
+        }
+
         public static bool HoldingLeftBumper()
         {
             return Input.GetButton("LeftBumper");
