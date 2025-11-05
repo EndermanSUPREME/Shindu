@@ -96,6 +96,7 @@ public class PlayerCamera : MonoBehaviour
         return inputDir != Vector3.zero;
     }
 
+    // Always running when player is not in focus mode
     void AlignCamera()
     {
         // smoothly rotate the camera
@@ -115,7 +116,9 @@ public class PlayerCamera : MonoBehaviour
             }
 
         // smoothly move the camera-pivot
-        transform.position = Vector3.Lerp(transform.position, baseCameraPoint.position, moveSpeed * Time.deltaTime);
+        float amount = (PlayerManager.Instance.GetFallingVelocity() > 1) ? moveSpeed + PlayerManager.Instance.GetFallingVelocity() : moveSpeed;
+        
+        transform.position = Vector3.Lerp(transform.position, baseCameraPoint.position, amount * Time.deltaTime);
         bool suggestTurn = GetAngle() >= 60 && GetAngle() <= 100;
 
         if (!turningCamera && suggestTurn)

@@ -32,7 +32,7 @@ public class LedgeMovement : PlayerState
         while (Vector3.Angle(controller.transform.forward, grabPos) > 0.1f)
         {
             if (controller == null || nextState != null) return;
-            
+
             controller.transform.rotation = Quaternion.Slerp(
                 controller.transform.rotation,
                 targetRotation,
@@ -62,6 +62,8 @@ public class LedgeMovement : PlayerState
 
         while (Vector3.Distance(controller.transform.position, pos) > 0.5f)
         {
+            if (controller == null || nextState != null) return;
+            
             controller.transform.position = Vector3.Lerp(
                 controller.transform.position,
                 pos,

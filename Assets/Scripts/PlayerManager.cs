@@ -33,6 +33,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
     public Transform leftFoot, rightFoot, wallCheckPoint, ledgeCheckPoint;
     [HideInInspector] public float defaultColliderRadius;
+    float fallVelocity;
 
     void Start()
     {
@@ -54,6 +55,9 @@ public class PlayerManager : Singleton<PlayerManager>
 
     public CharacterController GetController() { return controller; }
     public bool ControllerEnabled() { return controller != null && controller.enabled; }
+
+    public float GetFallingVelocity() => fallVelocity;
+    public void SetFallingVelocity(float v) { fallVelocity = v; }
 
     public void DisableRoot()
     {

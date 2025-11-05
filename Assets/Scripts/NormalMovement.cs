@@ -34,6 +34,11 @@ public class NormalMovement : PlayerState
 
         PlayerManager.Instance.EnableRoot();
     }
+    ~NormalMovement()
+    {
+        // when dtor is ran reset falling vel
+        PlayerManager.Instance.SetFallingVelocity(0);
+    }
 
     // run within Update
     public override void Perform()
@@ -141,6 +146,7 @@ public class NormalMovement : PlayerState
                     {
                         // falling over-time
                         velocity.y += gravity * PlayerManager.Instance.gravityMultiplier * Time.deltaTime;
+                        PlayerManager.Instance.SetFallingVelocity(Mathf.Abs(velocity.y));
 
                         if (!PlayerManager.Instance.falling)
                         {
@@ -149,6 +155,8 @@ public class NormalMovement : PlayerState
                     }
             } else
                 {
+                    PlayerManager.Instance.SetFallingVelocity(0);
+
                     // IS GROUNDED
                     if (PlayerManager.Instance.falling)
                     {
@@ -156,6 +164,8 @@ public class NormalMovement : PlayerState
                         {
                             if (!PlayerManager.Instance.isRolling)
                             {
+                                PlayerManager.Instance.EnableRoot();
+                                
                                 float landingVel = Mathf.Abs(velocity.y);
                                 if (landingVel < 18)
                                 {
@@ -164,7 +174,6 @@ public class NormalMovement : PlayerState
                                     {
                                         PlayerManager.Instance.GetPlayerAnimator().Play("hard_landing");
                                     }
-                                PlayerManager.Instance.EnableRoot();
                             } else
                                 {
                                     PlayerManager.Instance.isRolling = false;
