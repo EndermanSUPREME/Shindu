@@ -74,8 +74,18 @@ public class NormalMovement : PlayerState
         if (PlayerManager.Instance.droppingDown) {
             return leftFootGrounded || rightFootGrounded;
         }
+
+        // check if we rolled off an edge
+        if (PlayerManager.Instance.isRolling)
+        {
+            if (!leftFootGrounded && !rightFootGrounded)
+            {
+                PlayerManager.Instance.falling = true;
+            }
+            return leftFootGrounded || rightFootGrounded;
+        }
         
-        return PlayerManager.Instance.isRolling || jumpCount == 0 || leftFootGrounded || rightFootGrounded;
+        return leftFootGrounded || rightFootGrounded;
     }
 
     // specific methods for this derived class
@@ -144,15 +154,21 @@ public class NormalMovement : PlayerState
                     {
                         if (PlayerManager.Instance.AnimExists())
                         {
-                            float landingVel = Mathf.Abs(velocity.y);
-                            if (landingVel < 18)
+                            if (!PlayerManager.Instance.isRolling)
                             {
-                                PlayerManager.Instance.GetPlayerAnimator().Play("soft_landing");
+                                float landingVel = Mathf.Abs(velocity.y);
+                                if (landingVel < 18)
+                                {
+                                    PlayerManager.Instance.GetPlayerAnimator().Play("soft_landing");
+                                } else
+                                    {
+                                        PlayerManager.Instance.GetPlayerAnimator().Play("hard_landing");
+                                    }
+                                PlayerManager.Instance.EnableRoot();
                             } else
                                 {
-                                    PlayerManager.Instance.GetPlayerAnimator().Play("hard_landing");
+                                    PlayerManager.Instance.isRolling = false;
                                 }
-                            PlayerManager.Instance.EnableRoot();
                         }
                         PlayerManager.Instance.falling = false;
                     }

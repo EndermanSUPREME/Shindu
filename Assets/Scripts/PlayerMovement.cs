@@ -7,7 +7,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private string stateName;
 
-    public void FinishedRoll() { PlayerManager.Instance.isRolling = false; }
+    public void FinishedRoll() {}
     public void ClimbedLedge() { PlayerManager.Instance.hanging = false; }
 
     void Start()
