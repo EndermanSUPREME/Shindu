@@ -199,7 +199,8 @@ public class NormalMovement : PlayerState
                         velocity.y = -2;
                     }
 
-                    if (ControllerInput.PressedA() && jumpCount == 0)
+                    // player cannot start a jump while attacking
+                    if (!PlayerManager.Instance.attacking && ControllerInput.PressedA() && jumpCount == 0)
                     {
                         if (!PlayerManager.Instance.crouched)
                         {
@@ -239,10 +240,12 @@ public class NormalMovement : PlayerState
             {
                 // set time of first wall contact
                 if (wallPressTime == 0) wallPressTime = Time.time;
-
-                // after pushing into the wall for long enough switch states
                 float timeElapsed = Time.time - wallPressTime;
-                if (timeElapsed >= 0.35f)
+
+                // after pushing into a wall for long enough and pressing right-bumper
+                // the player will hug the wall
+                // (you do not need to hold right bumper to continue hugging the wall)
+                if (timeElapsed >= 0.05f && ControllerInput.PressedRightBumper())
                 {
                     Debug.Log("Next State Dispatched [WallMovement]");
                     Signal(new WallMovement(-hit.normal));

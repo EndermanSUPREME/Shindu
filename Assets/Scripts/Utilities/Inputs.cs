@@ -9,22 +9,50 @@ namespace ControllerInputs
         {
             return Input.GetButtonDown("Jump");
         }
+        public static bool HoldingA()
+        {
+            return Input.GetButton("Jump");
+        }
+
         public static bool PressedB()
         {
             return Input.GetButtonDown("B");
         }
+        public static bool HoldingB()
+        {
+            return Input.GetButton("B");
+        }
+
         public static bool PressedX()
         {
             return Input.GetButtonDown("X");
         }
+        public static bool HoldingX()
+        {
+            return Input.GetButton("X");
+        }
+
         public static bool PressedY()
         {
             return Input.GetButtonDown("Y");
         }
+        public static bool HoldingY()
+        {
+            return Input.GetButton("Y");
+        }
 
+        public static bool PressedLeftBumper()
+        {
+            return Input.GetButtonDown("LeftBumper");
+        }
         public static bool HoldingLeftBumper()
         {
             return Input.GetButton("LeftBumper");
+        }
+
+        public static bool PressedRightBumper()
+        {
+            return Input.GetButtonDown("RightBumper");
         }
         public static bool HoldingRightBumper()
         {
