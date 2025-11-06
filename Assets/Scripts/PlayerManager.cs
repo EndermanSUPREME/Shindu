@@ -19,6 +19,7 @@ public class PlayerManager : Singleton<PlayerManager>
     public bool huggingWall;
     public bool crouched;
     public bool attacking;
+    public bool blocking;
     public bool isRolling;
     public bool hanging;
     public bool droppingDown;

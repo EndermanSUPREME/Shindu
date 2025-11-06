@@ -7,6 +7,7 @@ using ControllerInputs;
 public class PlayerMovement : MonoBehaviour
 {
     public void OpenFollowThrough() { AttackSystem.OpenFollowThrough(); }
+    public void CloseFollowThrough() { AttackSystem.CloseFollowThrough(); }
     public void ResetSwingCount() { AttackSystem.ResetSwingCount(); }
     public void FinishedAttack() { AttackSystem.FinishedAttack(); }
     public void ClimbedLedge() { PlayerManager.Instance.hanging = false; }
@@ -26,32 +27,12 @@ public class PlayerMovement : MonoBehaviour
         {
             if (PlayerManager.Instance.GetState().ReadSignal() == null)
             {
-                // switch (PlayerManager.Instance.GetState())
-                // {
-                //     case NormalMovement:
-                //         stateName = "NormalMovement";
-                //     break;
-                //     case WallMovement:
-                //         stateName = "WallMovement";
-                //     break;
-                //     case LedgeMovement:
-                //         stateName = "LedgeMovement";
-                //     break;
-                //     default:
-                //         stateName = "Unknown";
-                //     break;
-                // }
-
-                // perform current state when there is no signal
-                PlayerManager.Instance.GetState().Perform();
-
-                if (ControllerInput.PressedX())
+                // player can not change position around when blocking
+                if (!PlayerManager.Instance.blocking)
                 {
-                    Attack();
-                } else if (ControllerInput.PressedY())
-                    {
-                        UseItem();
-                    }
+                    // perform current state when there is no signal
+                    PlayerManager.Instance.GetState().Perform();
+                }
             } else
                 {
                     Debug.Log("Transitioning to New State");
@@ -61,24 +42,16 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void Attack()
-    {
-        Debug.Log("Attack!");
-        AttackSystem.PerformAttack();
-    }
-
-    void UseItem()
-    {
-        Debug.Log("Using Item!");
-    }
-
     void FixedUpdate()
     {
         if (PlayerManager.Instance.HasState())
         {
             if (PlayerManager.Instance.GetState().ReadSignal() == null)
             {
-                PlayerManager.Instance.GetState().FixedPerform();
+                if (!PlayerManager.Instance.blocking)
+                {
+                    PlayerManager.Instance.GetState().FixedPerform();
+                }
             }
         }
     }

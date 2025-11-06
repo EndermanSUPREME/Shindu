@@ -15,6 +15,12 @@ public static class AttackSystem
         continueAttacking = false;
         followThrough = true;
     }
+    public static void CloseFollowThrough()
+    {
+        continueAttacking = false;
+        followThrough = false;
+    }
+
     // meant for short grounded one swings such as: crouch_swing
     public static void FinishedAttack() { PlayerManager.Instance.attacking = false; }
     public static void ResetSwingCount()
@@ -32,6 +38,7 @@ public static class AttackSystem
     public static void PerformAttack()
     {
         if (anim == null) return;
+
         bool inTheAir = !PlayerManager.Instance.isGrounded;
 
         if (inTheAir)
