@@ -228,6 +228,12 @@ public class NormalMovement : PlayerState
         }
     }
 
+    void EnemyLockOn()
+    {
+        // player forward looks at the enemy
+        // sideways movement makes the player circle around the enemy
+    }
+
     // executes when player is moving normally
     void CheckWallCollision()
     {
@@ -290,6 +296,21 @@ public class NormalMovement : PlayerState
         styleBlend = Mathf.Lerp(styleBlend, IsCrouching() ? 1 : 0, 5 * Time.deltaTime);
         PlayerManager.Instance.GetPlayerAnimator().SetFloat("style", styleBlend);
         PlayerManager.Instance.GetPlayerAnimator().SetFloat("speed", moveBlend);
+    }
+
+    public Vector3 LockOn(IEnemy target, Vector3 cameraPivotPoint)
+    {
+        Vector3 newFwdDir = Vector3.zero;
+        if (target != null)
+        {
+            // same height so we do not have weird pitch rotations
+            Vector3 b = new Vector3(target.GetPosition().x, 0, target.GetPosition().z);
+            Vector3 a = new Vector3(cameraPivotPoint.x, 0, cameraPivotPoint.z);
+
+            newFwdDir = b - a;
+            newFwdDir.Normalize();
+        }
+        return newFwdDir;
     }
 
     public Vector3 CalculateLookDirection(Vector3 inputDir)

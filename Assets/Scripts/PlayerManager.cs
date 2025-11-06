@@ -9,7 +9,9 @@ public class PlayerManager : Singleton<PlayerManager>
 
     [Header("Player Stats")]
     public float moveSpeed = 4, jumpForce = 3, rotationSpeed = 120,
-                gravityMultiplier = 2, groundCheckRadius = 0.25f, playerHeight = 2.75f;
+                gravityMultiplier = 2, groundCheckRadius = 0.25f, playerHeight = 2.75f,
+                enemySearchRange = 5;
+    public int attackDamage = 10;
 
     [Header("Player States")]
     public bool focused;
@@ -28,12 +30,15 @@ public class PlayerManager : Singleton<PlayerManager>
     public LayerMask groundMask;
     public LayerMask wallLayer;
     public LayerMask ledgeLayer;
+    public LayerMask enemyLayer;
 
     // runtime unity variables
     [SerializeField] Animator playerAnim;
     [SerializeField] CharacterController controller;
+    [SerializeField] PlayerCamera playerCamera;
 
-    public Transform leftFoot, rightFoot, wallCheckPoint, ledgeCheckPoint;
+    public Transform leftFoot, rightFoot, wallCheckPoint, ledgeCheckPoint, attackPoint;
+    public Sword playerSword;
     [HideInInspector] public float defaultColliderRadius;
     float fallVelocity;
 
@@ -64,6 +69,8 @@ public class PlayerManager : Singleton<PlayerManager>
 
     public CharacterController GetController() { return controller; }
     public bool ControllerEnabled() { return controller != null && controller.enabled; }
+
+    public PlayerCamera GetPlayerCamera() => playerCamera;
 
     public float GetFallingVelocity() => fallVelocity;
     public void SetFallingVelocity(float v) { fallVelocity = v; }

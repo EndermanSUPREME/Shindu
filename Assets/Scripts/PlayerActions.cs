@@ -17,6 +17,9 @@ public class PlayerActions : MonoBehaviour
                 PlayerManager.Instance.blocking = false;
             }
 
+            // trying to lock onto nearby target
+            PlayerManager.Instance.lockedIn = ControllerInput.HoldingRightTrigger();
+
             // Perform some Action
             if (ControllerInput.PressedX())
             {

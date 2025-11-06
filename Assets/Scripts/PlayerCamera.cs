@@ -121,7 +121,7 @@ public class PlayerCamera : MonoBehaviour
         transform.position = Vector3.Lerp(transform.position, baseCameraPoint.position, amount * Time.deltaTime);
         bool suggestTurn = GetAngle() >= 60 && GetAngle() <= 100;
 
-        if (!turningCamera && suggestTurn)
+        if (PlayerManager.Instance.lockedIn || (!turningCamera && suggestTurn))
         {
             // only run this once and forget about it
             _ = TurnCamera();

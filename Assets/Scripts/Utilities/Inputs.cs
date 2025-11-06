@@ -58,5 +58,17 @@ namespace ControllerInputs
         {
             return Input.GetButton("RightBumper");
         }
+
+        public static bool HoldingLeftTrigger()
+        {
+            float leftTrigger = Input.GetAxis("LeftTrigger");
+            return leftTrigger > 0.1f;
+        }
+
+        public static bool HoldingRightTrigger()
+        {
+            float rightTrigger = Input.GetAxis("RightTrigger");
+            return rightTrigger > 0.1f;
+        }
     }
 }

@@ -6,11 +6,14 @@ using ControllerInputs;
 
 public class PlayerMovement : MonoBehaviour
 {
+    // Animation Targets
     public void OpenFollowThrough() { AttackSystem.OpenFollowThrough(); }
     public void CloseFollowThrough() { AttackSystem.CloseFollowThrough(); }
     public void ResetSwingCount() { AttackSystem.ResetSwingCount(); }
     public void FinishedAttack() { AttackSystem.FinishedAttack(); }
     public void ClimbedLedge() { PlayerManager.Instance.hanging = false; }
+    public void EnableSword() { PlayerManager.Instance.playerSword.AllowInfliction(); }
+    public void DisableSword() { PlayerManager.Instance.playerSword.DisableInfliction(); }
 
     void Start()
     {
@@ -32,6 +35,24 @@ public class PlayerMovement : MonoBehaviour
                 {
                     // perform current state when there is no signal
                     PlayerManager.Instance.GetState().Perform();
+                }
+
+                if (PlayerManager.Instance.GetState() is NormalMovement s && PlayerManager.Instance.lockedIn)
+                {
+                    IEnemy target = FindClosestEnemy();
+                    if (target != null)
+                    {
+                        Vector3 camPos = PlayerManager.Instance.GetPlayerCamera().transform.position;
+                        Vector3 lookDir = s.LockOn(target, camPos);
+                        if (lookDir != Vector3.zero)
+                        {
+                            PlayerManager.Instance.GetController().transform.rotation = Quaternion.Slerp(
+                                PlayerManager.Instance.GetController().transform.rotation,
+                                Quaternion.LookRotation(lookDir),
+                                50f * Time.deltaTime
+                            );
+                        }
+                    }
                 }
             } else
                 {
@@ -64,13 +85,54 @@ public class PlayerMovement : MonoBehaviour
             float x = Input.GetAxis("Horizontal");
             float z = Input.GetAxis("Vertical");
             Vector3 inputDir = new Vector3(x, 0f, z);
-            
-            if (inputDir != Vector3.zero && !PlayerManager.Instance.focused && !PlayerManager.Instance.isRolling)
+
+            if (inputDir != Vector3.zero)
             {
-                Vector3 moveDir = s.CalculateLookDirection(inputDir);
-                s.RotatePlayer(moveDir);
+                if (!PlayerManager.Instance.lockedIn)
+                {
+                    if (!PlayerManager.Instance.focused && !PlayerManager.Instance.isRolling)
+                    {
+                        Vector3 moveDir = s.CalculateLookDirection(inputDir);
+                        s.RotatePlayer(moveDir);
+                    }
+                }
             }
         }
+    }
+
+    IEnemy FindClosestEnemy()
+    {
+        float closestDist = -1;
+        IEnemy closestEnemy = null;
+
+        Vector3 pos = PlayerManager.Instance.GetController().transform.position;
+
+        // look for IEnemy objects with triggers
+        Collider[] nearbyEnemies = Physics.OverlapSphere(
+            pos,
+            PlayerManager.Instance.enemySearchRange,
+            PlayerManager.Instance.enemyLayer,
+            QueryTriggerInteraction.UseGlobal
+        );
+
+        Debug.Log($"Count of Nearby Enemies: {nearbyEnemies.Length}");
+
+        for (int i = 0; i < nearbyEnemies.Length; ++i)
+        {
+            IEnemy enemy = nearbyEnemies[i].transform.GetComponent<IEnemy>();
+            if (enemy != null)
+            {
+                float d = Vector3.Distance(pos, nearbyEnemies[i].transform.position);
+                if (closestDist == -1 || closestDist < d)
+                {
+                    closestDist = d;
+                    closestEnemy = enemy;
+                    Debug.Log($"Closest Enemy: {nearbyEnemies[i].transform.name}");
+                }
+            }
+        }
+
+        return closestEnemy;
     }
 
     void OnAnimatorMove()
@@ -92,5 +154,9 @@ public class PlayerMovement : MonoBehaviour
     void OnDrawGizmos()
     {
         // Gizmos.DrawSphere(PlayerManager.Instance.ledgeCheckPoint.position, 0.1f);
+        Gizmos.DrawWireSphere(
+            PlayerManager.Instance.GetController().transform.position,
+            PlayerManager.Instance.enemySearchRange
+        );
     }
 }//EndScript
