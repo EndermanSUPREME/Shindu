@@ -106,6 +106,10 @@ public class NormalMovement : PlayerState
             float z = Input.GetAxis("Vertical");
             Vector3 inputDir = new Vector3(x, 0f, z);
 
+            // set floats for locked-in blend-tree parameters
+            PlayerManager.Instance.GetPlayerAnimator().SetFloat("xDir", inputDir.x);
+            PlayerManager.Instance.GetPlayerAnimator().SetFloat("yDir", inputDir.z);
+
             // mark when player is in a crouched state
             PlayerManager.Instance.crouched = IsCrouching();
 
@@ -293,7 +297,14 @@ public class NormalMovement : PlayerState
 
     void UpdateAnimator()
     {
-        styleBlend = Mathf.Lerp(styleBlend, IsCrouching() ? 1 : 0, 5 * Time.deltaTime);
+        if (PlayerManager.Instance.lockedIn)
+        {
+            styleBlend = Mathf.Lerp(styleBlend, -1, 5 * Time.deltaTime);
+        } else
+            {
+                styleBlend = Mathf.Lerp(styleBlend, IsCrouching() ? 1 : 0, 5 * Time.deltaTime);
+            }
+
         PlayerManager.Instance.GetPlayerAnimator().SetFloat("style", styleBlend);
         PlayerManager.Instance.GetPlayerAnimator().SetFloat("speed", moveBlend);
     }
