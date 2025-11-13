@@ -115,7 +115,7 @@ public class PlayerMovement : MonoBehaviour
             QueryTriggerInteraction.UseGlobal
         );
 
-        Debug.Log($"Count of Nearby Enemies: {nearbyEnemies.Length}");
+        // Debug.Log($"Count of Nearby Enemies: {nearbyEnemies.Length}");
 
         for (int i = 0; i < nearbyEnemies.Length; ++i)
         {
@@ -127,7 +127,7 @@ public class PlayerMovement : MonoBehaviour
                 {
                     closestDist = d;
                     closestEnemy = enemy;
-                    Debug.Log($"Closest Enemy: {nearbyEnemies[i].transform.name}");
+                    // Debug.Log($"Closest Enemy: {nearbyEnemies[i].transform.name}");
                 }
             }
         }

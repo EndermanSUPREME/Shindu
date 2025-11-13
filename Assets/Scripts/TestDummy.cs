@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 using UnityEngine;
@@ -10,6 +11,7 @@ public class TestDummy : MonoBehaviour, IEnemy
     [SerializeField] int health = 100;
     [SerializeField] float iFrameDuration = 0.5f;
     float iFrameTime = 0;
+    int hitCount = 0;
 
     bool gamePaused = false;
     [SerializeField] bool iFramesActive = false;
@@ -27,14 +29,16 @@ public class TestDummy : MonoBehaviour, IEnemy
 
     void Update()
     {
-
+        anim.SetBool("isDead", !isAlive);
     }
 
     public bool isDead() => !isAlive;
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount, bool front)
     {
         if (!isAlive) return; // cant damage dead things
         if (iFramesActive) return; // cant damage when iframe state active
+
+        Flinch(front);
 
         health -= amount;
         if (health <= 0)
@@ -48,6 +52,41 @@ public class TestDummy : MonoBehaviour, IEnemy
                 // run and forget about it
                 _ = IFrames();
             }
+    }
+
+    // enemy animator target
+    public void ResetFlinchCount() { hitCount = 0; }
+
+    void Flinch(bool front)
+    {
+        System.Random rand = new System.Random();
+        int choice = rand.Next(2); // returns 0 or 1
+
+        if (++hitCount > 2)
+        {
+            if (front)
+                anim.Play("hurt_fallForward");
+            else
+                anim.Play("hurt_fallBack");
+
+            ResetFlinchCount();
+        } else
+            {
+                if (choice == 0)
+                {
+                    if (!front)
+                        anim.Play("hurtOne", 0, 0);
+                    else
+                        anim.Play("hurtOne_behind", 0, 0);
+                } else
+                    {
+                        if (!front)
+                            anim.Play("hurtTwo", 0, 0);
+                        else
+                            anim.Play("hurtTwo_behind", 0, 0);
+                    }   
+            }
+
     }
     public Vector3 GetPosition() => transform.position;
 

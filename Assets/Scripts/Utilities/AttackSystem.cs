@@ -7,6 +7,8 @@ public static class AttackSystem
     static bool followThrough = false;
     static bool continueAttacking = false;
 
+    public enum AttackDirection { FRONT, BACK, NONE };
+
     public static void SetAnimator(ref Animator anim_) { anim = anim_; }
 
     // Animator Targets
