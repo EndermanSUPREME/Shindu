@@ -10,7 +10,7 @@ public class PlayerManager : Singleton<PlayerManager>
     [Header("Player Stats")]
     public float moveSpeed = 4, jumpForce = 3, rotationSpeed = 120,
                 gravityMultiplier = 2, groundCheckRadius = 0.25f, playerHeight = 2.75f,
-                enemySearchRange = 5;
+                enemySearchRange = 5, slideForce = 4f;
     public int attackDamage = 10;
 
     [Header("Player States")]

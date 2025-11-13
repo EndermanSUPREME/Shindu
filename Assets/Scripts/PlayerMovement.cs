@@ -151,10 +151,49 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    bool slidingOffEnemy = false;
+    void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        // if the player lands on an enemy the player
+        // will slide off the enemy model
+        bool isEnemy = ((1 << hit.gameObject.layer) & PlayerManager.Instance.enemyLayer) != 0;
+        if (!slidingOffEnemy && !PlayerManager.Instance.isGrounded && isEnemy)
+        {
+            // run and forget about it
+            _ = SlideOffEnemy(hit);
+        }
+    }
+
+    // apply constant force against the player so they are pushed off an enemy
+    async Task SlideOffEnemy(ControllerColliderHit hit)
+    {
+        slidingOffEnemy = true;
+        while (!PlayerManager.Instance.isGrounded)
+        {
+            if (Vector3.Dot(hit.normal, Vector3.up) > 0.5f)
+            {
+                // calculate the direction to slide the player and apply it
+                // to the character controller
+                Vector3 slideDir = Vector3.ProjectOnPlane(hit.moveDirection, Vector3.up).normalized;
+
+                if (slideDir == Vector3.zero)
+                {
+                    slideDir = transform.right;
+                }
+
+                PlayerManager.Instance.GetController().Move(
+                    slideDir * PlayerManager.Instance.slideForce * Time.deltaTime
+                );
+            }
+            await Task.Yield();
+        }
+        slidingOffEnemy = false;
+    }
+
     void OnDrawGizmos()
     {
         if (PlayerManager.Instance == null) return;
-        
+
         Gizmos.DrawSphere(PlayerManager.Instance.ledgeCheckPoint.position, 0.1f);
         Gizmos.DrawWireSphere(
             PlayerManager.Instance.GetController().transform.position,
