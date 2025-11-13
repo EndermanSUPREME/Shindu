@@ -12,6 +12,7 @@ public class TestDummy : MonoBehaviour, IEnemy
     [SerializeField] float iFrameDuration = 0.5f;
     float iFrameTime = 0;
     int hitCount = 0;
+    bool knockedBack = false;
 
     bool gamePaused = false;
     [SerializeField] bool iFramesActive = false;
@@ -38,9 +39,10 @@ public class TestDummy : MonoBehaviour, IEnemy
         if (!isAlive) return; // cant damage dead things
         if (iFramesActive) return; // cant damage when iframe state active
 
+        health -= amount;
+
         Flinch(front);
 
-        health -= amount;
         if (health <= 0)
         {
             health = 0;
@@ -55,7 +57,15 @@ public class TestDummy : MonoBehaviour, IEnemy
     }
 
     // enemy animator target
-    public void ResetFlinchCount() { hitCount = 0; }
+    public void ResetFlinchCount()
+    {
+        if (health <= 0) return;
+
+        hitCount = 0;
+        knockedBack = false;
+
+        Debug.Log("Full Reset from Flinch");
+    }
 
     void Flinch(bool front)
     {
@@ -69,6 +79,7 @@ public class TestDummy : MonoBehaviour, IEnemy
             else
                 anim.Play("hurt_fallBack");
 
+            knockedBack = true;
             ResetFlinchCount();
         } else
             {
@@ -113,6 +124,18 @@ public class TestDummy : MonoBehaviour, IEnemy
     {
         Debug.Log("Test Dummy Died!");
         isAlive = false;
-        gameObject.SetActive(false);
+
+        if (!knockedBack)
+        {
+            // play standard standing death animation
+            anim.Play("deathThree");
+        }
+
+        // disable enemy limbs (turn off colliders so the player can pass through the enemy)
+        EnemyLimb[] limbs = GetComponentsInChildren<EnemyLimb>(true);
+        foreach (EnemyLimb limb in limbs)
+        {
+            limb.DisableLimb();
+        }
     }
 }//EndScript

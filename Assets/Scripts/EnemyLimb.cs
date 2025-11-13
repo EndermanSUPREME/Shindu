@@ -1,15 +1,18 @@
 using UnityEngine;
 
+[RequireComponent(typeof(BoxCollider))]
 public class EnemyLimb : MonoBehaviour, IDamageable
 {
     IEnemy Host;
     CharacterController playerController;
+    BoxCollider boxCollider;
 
     void Start()
     {
         // Find the first parent object that implements IEnemy
         Host = GetComponentInParent<IEnemy>();
         playerController = FindFirstObjectByType<CharacterController>();
+        boxCollider = GetComponent<BoxCollider>();
 
         if (playerController == null)
         {
@@ -47,5 +50,10 @@ public class EnemyLimb : MonoBehaviour, IDamageable
         if (Host != null) {
             Host.TakeDamage(amount, (CalcAttackDir() == AttackSystem.AttackDirection.FRONT) ? true : false);
         }
+    }
+
+    public void DisableLimb()
+    {
+        boxCollider.enabled = false;
     }
 }//EndScript
