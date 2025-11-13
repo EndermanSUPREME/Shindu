@@ -153,7 +153,9 @@ public class PlayerMovement : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        // Gizmos.DrawSphere(PlayerManager.Instance.ledgeCheckPoint.position, 0.1f);
+        if (PlayerManager.Instance == null) return;
+        
+        Gizmos.DrawSphere(PlayerManager.Instance.ledgeCheckPoint.position, 0.1f);
         Gizmos.DrawWireSphere(
             PlayerManager.Instance.GetController().transform.position,
             PlayerManager.Instance.enemySearchRange
