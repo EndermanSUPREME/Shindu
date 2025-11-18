@@ -49,6 +49,7 @@ public class WallMovement : PlayerState
     public override void Perform()
     {
         if (controller == null || nextState != null) return;
+        if (!controller.enabled) return;
 
         Move();
     }

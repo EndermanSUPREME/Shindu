@@ -88,6 +88,8 @@ public class LedgeMovement : PlayerState
     public override void Perform()
     {
         if (controller == null || nextState != null) return;
+        if (!controller.enabled) return;
+        
         Move();
     }
     public override PlayerState ReadSignal() { return nextState; }

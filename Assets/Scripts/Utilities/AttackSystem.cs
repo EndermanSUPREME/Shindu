@@ -48,9 +48,50 @@ public static class AttackSystem
             AirAttack();
         } else
             {
+                IEnemy target = FindingSystem.GetStealthKillTarget();
+                if (target != null)
+                {
+                    // classes that inherit IEnemy also will inherit Monobehaviour allowing for this type casting
+                    Transform enemy = (target as MonoBehaviour).transform;
+
+                    Transform player = PlayerManager.Instance.GetController().transform;
+
+                    // based on enemy forward determine if player is in-front or behind enemy
+                    Vector3 dir = player.position - enemy.position;
+                    float angle = Vector3.Angle(enemy.forward, dir);
+
+                    StealthKill(ref target, !(angle < 95f));
+
+                    return;
+                }
                 // this bool focuses on grounded attacks
                 PlayerManager.Instance.attacking = true;
                 StandardAttack();
+            }
+    }
+
+    // assumes target is always a non-null reference
+    static void StealthKill(ref IEnemy target, bool front)
+    {
+        System.Random rand = new System.Random();
+        int choice = rand.Next(2);
+
+        if (front)
+        {
+            // front
+            if (choice == 0) {
+                target.StealthKill("frontOne", true);
+            } else if (choice == 1) {
+                target.StealthKill("frontTwo", true);
+            }
+        } else
+            {
+                // back
+                if (choice == 0) {
+                    target.StealthKill("backOne", false);
+                } else if (choice == 1) {
+                    target.StealthKill("backTwo", false);
+                }
             }
     }
 

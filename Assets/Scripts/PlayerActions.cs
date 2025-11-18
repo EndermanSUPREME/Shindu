@@ -8,6 +8,8 @@ public class PlayerActions : MonoBehaviour
 {
     void Update()
     {
+        if (PlayerManager.Instance.performingStealthKill) return;
+        
         if (PlayerManager.Instance.HasState())
         {
             // exit blocking action

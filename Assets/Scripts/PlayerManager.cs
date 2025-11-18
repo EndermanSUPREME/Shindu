@@ -10,7 +10,7 @@ public class PlayerManager : Singleton<PlayerManager>
     [Header("Player Stats")]
     public float moveSpeed = 4, jumpForce = 3, rotationSpeed = 120,
                 gravityMultiplier = 2, groundCheckRadius = 0.25f, playerHeight = 2.75f,
-                enemySearchRange = 5, slideForce = 4f;
+                enemySearchRange = 5, stealthKillRange = 2f, slideForce = 4f;
     public int attackDamage = 10;
 
     [Header("Player States")]
@@ -25,10 +25,12 @@ public class PlayerManager : Singleton<PlayerManager>
     public bool isRolling;
     public bool hanging;
     public bool droppingDown;
+    public bool performingStealthKill;
 
     [Header("Raycast Layers")]
     public LayerMask groundMask;
     public LayerMask wallLayer;
+    public LayerMask obstacleLayer;
     public LayerMask ledgeLayer;
     public LayerMask enemyLayer;
 
@@ -44,6 +46,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
     void Start()
     {
+        performingStealthKill = false;
         defaultColliderRadius = controller.radius;
         if (playerAnim)
         {
@@ -68,7 +71,7 @@ public class PlayerManager : Singleton<PlayerManager>
     public bool AnimExists() { return playerAnim != null; }
 
     public CharacterController GetController() { return controller; }
-    public bool ControllerEnabled() { return controller != null && controller.enabled; }
+    public bool ControllerEnabled() { return controller != null && controller.enabled; } // might want to include `&& !performingStealthKill`
 
     public PlayerCamera GetPlayerCamera() => playerCamera;
 
@@ -87,4 +90,9 @@ public class PlayerManager : Singleton<PlayerManager>
     public void SetState(PlayerState newState){ state = newState; }
     public bool HasState(){ return state != null; }
     public PlayerState GetState(){ return state; }
+
+    public void DisableController() { performingStealthKill = true; }
+    public void EnableController() { performingStealthKill = false; }
+
+    public void ResetCamera() { if (playerCamera != null) playerCamera.ResetCamera(); }
 }

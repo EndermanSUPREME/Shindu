@@ -8,11 +8,10 @@ public class PlayerCamera : MonoBehaviour
 {
     [SerializeField] Transform baseCameraPoint, cameraFocusPoint;
     [SerializeField] float cameraSensitivity = 300f, moveSpeed = 5, rotationSpeed = 25, focusAlignSpeed = 30f, cameraTiltSpeed = 10f;
-    [SerializeField] LayerMask obstacleLayer;
 
     [SerializeField] float DEBUG_ANGLE = 0;
     float xRotation = 0f, yRotation = 0f;
-    bool turningCamera = false, isClipping = false;
+    bool turningCamera = false, isClipping = false, resetting = false;
     Vector3 originalCameraPosition, DEBUG_HIT_POSITION;
     Quaternion originalCameraRotation;
 
@@ -29,6 +28,9 @@ public class PlayerCamera : MonoBehaviour
 
     void LateUpdate()
     {
+        // camera is unable to move on its own
+        if (PlayerManager.Instance.performingStealthKill || resetting) return;
+
         PlayerManager.Instance.focused = CheckFocus();
         if (PlayerManager.Instance.focused)
         {
@@ -99,6 +101,8 @@ public class PlayerCamera : MonoBehaviour
     // Always running when player is not in focus mode
     void AlignCamera()
     {
+        if (PlayerManager.Instance.performingStealthKill) return;
+
         // smoothly rotate the camera
         float angleDiff = Quaternion.Angle(Camera.main.transform.localRotation, originalCameraRotation);
 
@@ -134,6 +138,8 @@ public class PlayerCamera : MonoBehaviour
 
         while (isMoving() && (GetAngle() > 0.1f && GetAngle() < 100f)) // we never fully reach 0
         {
+            if (PlayerManager.Instance.performingStealthKill) return;
+
             // rotate camera pivot
             Quaternion targetRotation = Quaternion.LookRotation(baseCameraPoint.forward);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
@@ -145,12 +151,15 @@ public class PlayerCamera : MonoBehaviour
 
     async Task CheckCameraClip()
     {
+        if (PlayerManager.Instance.performingStealthKill) return;
+
         Transform cam = Camera.main.transform;
 
         RaycastHit hit;
         Vector3 rayDir = (cam.position - baseCameraPoint.position).normalized;
 
-        bool rayLanded = Physics.Raycast(baseCameraPoint.position, rayDir, out hit, 5, obstacleLayer);
+        bool rayLanded = Physics.Raycast(baseCameraPoint.position, rayDir,
+                                            out hit, 5, PlayerManager.Instance.obstacleLayer);
 
         if (rayLanded)
         {
@@ -174,6 +183,18 @@ public class PlayerCamera : MonoBehaviour
             }
 
         await Task.Yield();
+    }
+
+    // force reset camera back to normal orientation
+    public void ResetCamera()
+    {
+        resetting = true;
+
+        // adjust camera transform
+        Camera.main.transform.localRotation = originalCameraRotation;
+        Camera.main.transform.localPosition = originalCameraPosition;
+
+        resetting = false;
     }
 
     void OnDrawGizmos()
